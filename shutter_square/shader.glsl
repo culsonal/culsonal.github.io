@@ -12,9 +12,6 @@ float sdf_scene(vec3 p) {
   float s1 = sdf3_sphere(p+vec3(.05,  .1, .2), .1);
   float s2 = sdf3_sphere(p+vec3(.01, .08, .31), .04);
   float s3 = sdf3_subtract(s1, s2);
-  //float s4 = sdf3_plane(p-vec3(0, 1, 0), vec4(0, -1, 0, 0));
-  //float s5 = sdf3_union(s3, s4);
-  //return s4;
   return s3;
 }
 
