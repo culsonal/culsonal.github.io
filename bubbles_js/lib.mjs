@@ -319,61 +319,6 @@ export const get_tri = ({ pts, tris, dim=2 }, i) => {
   ];
 };
 
-const compute_neohookean_2d_deltas_from_tri_and_orig = (tri_curr, tri_orig, [ ch_damping, cd_damping ]) => {
-  const [[ x1,  y1], [ x2,  y2], [ x3,  y3]] = tri_curr;
-  const [[ox1, oy1], [ox2, oy2], [ox3, oy3]] = tri_orig;
-
-  const X    = [   x2-x1,   x3-x1,   y2-y1,   y3-y1 ];
-  const Xhat = [ ox2-ox1, ox3-ox1, oy2-oy1, oy3-oy1 ];
-  const detB = 1/det2(Xhat);
-  const [ b1, b2, b3, b4 ] = [ detB*Xhat[3], -detB*Xhat[1], -detB*Xhat[2], detB*Xhat[0] ];
-  const [ f1, f2, f3, f4 ] = mat_mul_prod2x2(X, [ b1, b2, b3, b4 ]);
-  const [ dCHdX1x, dCHdX1y ] = [ detB*(y2 - y3), detB*(x3 - x2) ];
-  const [ dCHdX2x, dCHdX2y ] = [ detB*(y3 - y1), detB*(x1 - x3) ];
-  const [ dCHdX3x, dCHdX3y ] = [ detB*(y1 - y2), detB*(x2 - x1) ];
-  const ch_grad_sum_sq = dCHdX1x**2 + dCHdX1y**2 + dCHdX2x**2 + dCHdX2y**2 + dCHdX3x**2 + dCHdX3y**2;
-  const ch_constraint = det2([ f1, f2, f3, f4 ]) - (1+cd_damping/ch_damping);
-  const ch_pbd_lambda = -ch_constraint*ch_damping/ch_grad_sum_sq;
-  const [ dx1h, dy1h ] = [ ch_pbd_lambda*dCHdX1x, ch_pbd_lambda*dCHdX1y ];
-  const [ dx2h, dy2h ] = [ ch_pbd_lambda*dCHdX2x, ch_pbd_lambda*dCHdX2y ];
-  const [ dx3h, dy3h ] = [ ch_pbd_lambda*dCHdX3x, ch_pbd_lambda*dCHdX3y ];
-
-  const cd_constraint = Math.sqrt(f1**2 + f2**2 + f3**2 + f4**2);
-  const dCDdX1x = -(f1*b1 + f1*b3 + f2*b2 + f2*b4)/cd_constraint;
-  const dCDdX1y = -(f3*b1 + f3*b3 + f4*b2 + f4*b4)/cd_constraint;
-  const [ dCDdX2x, dCDdX2y ] = [ (f1*b1 + f2*b2)/cd_constraint, (f3*b1 + f4*b2)/cd_constraint ];
-  const [ dCDdX3x, dCDdX3y ] = [ (f1*b3 + f2*b4)/cd_constraint, (f3*b3 + f4*b4)/cd_constraint ];
-  const cd_grad_sum_sq = dCDdX1x**2 + dCDdX1y**2 + dCDdX2x**2 + dCDdX2y**2 + dCDdX3x**2 + dCDdX3y**2;
-  const cd_pbd_lambda = -cd_constraint*cd_damping/cd_grad_sum_sq;
-  const [ dx1d, dy1d ] = [ cd_pbd_lambda*dCDdX1x, cd_pbd_lambda*dCDdX1y ];
-  const [ dx2d, dy2d ] = [ cd_pbd_lambda*dCDdX2x, cd_pbd_lambda*dCDdX2y ];
-  const [ dx3d, dy3d ] = [ cd_pbd_lambda*dCDdX3x, cd_pbd_lambda*dCDdX3y ];
-
-  return [[ dx1h+dx1d, dy1h+dy1d ], [ dx2h+dx2d, dy2h+dy2d ], [ dx3h+dx3d, dy3h+dy3d ]];
-};
-
-export const solve_neohookean_constraints_tris_2d = ({ pts, tris, orig }, dampings) => {
-  for (let i = 0; i < tris.length/3; i++) {
-    const [ tri_curr, tri_orig, [ i1, i2, i3 ] ] = get_tri_with_orig({ pts, orig, tris, dim: 2 }, i);
-    const [ [dx1, dy1], [dx2, dy2], [dx3, dy3]
-    ] = compute_neohookean_2d_deltas_from_tri_and_orig(tri_curr, tri_orig, dampings);
-    pts[i1*2+0] += dx1; pts[i1*2+1] += dy1;
-    pts[i2*2+0] += dx2; pts[i2*2+1] += dy2;
-    pts[i3*2+0] += dx3; pts[i3*2+1] += dy3;
-  }
-};
-
-export const solve_neohookean_constraints_tris_3d_xy_plane = ({ pts, tris, orig }, dampings) => {
-  for (let i = 0; i < tris.length/3; i++) {
-    const [ tri_curr, tri_orig, [ i1, i2, i3 ] ] = get_tri_with_orig({ pts, orig, tris, dim: 3 }, i);
-    const [ [dx1, dy1], [dx2, dy2], [dx3, dy3]
-    ] = compute_neohookean_2d_deltas_from_tri_and_orig(tri_curr, tri_orig, dampings);
-    pts[i1*3+0] += dx1; pts[i1*3+1] += dy1;
-    pts[i2*3+0] += dx2; pts[i2*3+1] += dy2;
-    pts[i3*3+0] += dx3; pts[i3*3+1] += dy3;
-  }
-};
-
 export const solve_length_constraints_tris_2d = ({ pts, tris, orig }, damping=.1) => {
   for (let i = 0; i < tris.length/3; i++) {
     const [ curr_tri, orig_tri, tri_idxs ] = get_tri_with_orig({ pts, orig, tris, dim: 2 }, i);
