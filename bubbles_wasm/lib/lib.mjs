@@ -292,7 +292,6 @@ export const draw_pts_2d = (ctx, pts, size=2, color='#fff') => {
   }
 };
 
-// Doesn't actually work for grid_dim_x != grid_dim_y. Todo fix
 export const make_rect_geom_2d = ([grid_dim_x, grid_dim_y]=[10, 10], [x, y]=[0, 0], [sw, sh]=[1, 1]) => {
   const [ w, h, grid_pts ] = [ 1/(grid_dim_x-1), 1/(grid_dim_y-1), empty_2d_array(grid_dim_x, grid_dim_y) ];
   for (let i = 0; i < grid_dim_x; i++) for (let j = 0; j < grid_dim_y; j++)
