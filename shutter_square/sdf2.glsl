@@ -24,10 +24,6 @@ float sdf2_circle(vec2 p, float radius) {
   return length(p) - radius;
 }
 
-// todo: add heart, star
-// also: maybe just use some poly implicit fn
-// (i only need in/out after all)
-
 float sdf2_subtract(float d1, float d2) { return max(d1, -d2); }
 float sdf2_union(float d1, float d2) { return min(d1, d2); }
 float sdf2_intersection(float d1, float d2) { return max(d1, d2); }
